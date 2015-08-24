@@ -92,6 +92,51 @@
 			return $name;
 			
 		}
+
+		/**
+		 * Copy an uploaded video to the destination path
+		 * Support only mp4 videos
+		 *
+		 * $data['file'] 	-> array with image data (found in $_FILES)
+		 * $data['path'] 	-> destination path
+		 *
+		 * @param array $data
+		 * @return mixed
+		 */
+		public function copy_video($data){
+			
+			// Verify file and path
+			if (!isset($data['file']) || !isset($data['path']) || !is_array($data['file'])){
+				$this->errors[] = 'Name or path not found!';
+				return false;
+			}
+
+			if (!is_writable($data['path'])){
+				$this->errors[] = 'Destination path is not writable!';
+				return false;
+			}
+			
+			if (!$this->_verifyMimeVideo($data['file']['name'])){
+				$this->errors[] = 'The file must be an mp4 video!';
+				return false;
+			}
+			
+			// Generate filename and move file to destination path
+			$filename_array = explode('.', $data['file']['name']);
+			$ext = end($filename_array);
+			$ext = strtolower($ext);
+			$name = uniqid() . date('dmYHis') . '.' . $ext;
+			$complete_path = $data['path'] . DIRECTORY_SEPARATOR . $name;
+			
+			if (!move_uploaded_file($data['file']['tmp_name'], $data['path'] . $name)){
+				$this->errors[] = 'Error while upload the image!';
+				return false;
+			}
+			
+			// Return image filename
+			return $name;
+			
+		}
 		
 		
 		
@@ -367,6 +412,30 @@
 			$extension = strtolower($extension);
 			
 			$mimes = array('jpeg', 'jpg', 'png', 'gif');
+			
+			if (in_array($extension, $mimes)){
+				return true;
+			} else {
+				return false;
+			}
+			
+		}
+
+		/** 
+		 * Verifies the mime-type of a file for video
+		 *
+		 * @param string $file
+		 * @return bool
+		 */
+		private function _verifyMimeVideo($file){
+			
+			$filename_array = explode('.',$file);
+
+			$extension = end($filename_array);
+			
+			$extension = strtolower($extension);
+			
+			$mimes = array('mp4');
 			
 			if (in_array($extension, $mimes)){
 				return true;
